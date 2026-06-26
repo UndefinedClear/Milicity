@@ -20,6 +20,7 @@ local DefaultTheme = {
 	TriggerBackground = Color3.fromRGB(0, 120, 215),
 	TriggerText = Color3.fromRGB(255, 255, 255)
 }
+
 function SimpleUI.new(titleText, customTheme)
 	local self = setmetatable({}, SimpleUI)
 	
@@ -37,9 +38,9 @@ function SimpleUI.new(titleText, customTheme)
 	self.ScreenGui = screenGui
 	
 	self.IsVisible = true
-	self.Keybinds = {} -- Таблица для хранения активных биндов {KeyCode = callback}
+	self.Keybinds = {} 
 	
-	-- ГЛАВНОЕ ОКНО (Увеличил высоту до 420, так как элементов стало больше)
+	-- ГЛАВНОЕ ОКНО
 	local mainFrame = Instance.new("Frame")
 	mainFrame.Size = UDim2.new(0, 260, 0, 420)
 	mainFrame.Position = UDim2.new(0, 50, 0.5, -210)
@@ -80,7 +81,7 @@ function SimpleUI.new(titleText, customTheme)
 	closeCorner.CornerRadius = UDim.new(0, self.Theme.ButtonCornerRadius)
 	closeCorner.Parent = closeMenuBtn
 	
-	-- Контейнер для элементов (добавил ScrollingFrame, чтобы меню не ломалось, если элементов много)
+	-- Контейнер для элементов
 	local contentFrame = Instance.new("ScrollingFrame")
 	contentFrame.Size = UDim2.new(1, 0, 1, -45)
 	contentFrame.Position = UDim2.new(0, 0, 0, 45)
@@ -126,23 +127,21 @@ function SimpleUI.new(titleText, customTheme)
 	closeMenuBtn.MouseButton1Click:Connect(function() self:ToggleVisibility(false) end)
 	openButton.MouseButton1Click:Connect(function() self:ToggleVisibility(true) end)
 	
-	-- Глобальный обработчик для всех биндов (включая кастомные и системный H)
 	self.InputConnection = UserInputService.InputBegan:Connect(function(input, gpe)
 		if gpe then return end
 		
-		-- Системный хайд меню
 		if input.KeyCode == Enum.KeyCode.H then 
 			self:ToggleVisibility(not self.IsVisible) 
 		end
 		
-		-- Вызов динамических биндов пользователей
 		if self.Keybinds[input.KeyCode] then
 			task.spawn(self.Keybinds[input.KeyCode])
 		end
 	end)
 	
-	return self
+	return self -- Исправлено: был слипшийся return selfend
 end
+
 function SimpleUI:_makeDraggable(uiElement)
 	local dragging, dragStart, startPos
 	uiElement.InputBegan:Connect(function(input)
@@ -160,14 +159,15 @@ function SimpleUI:_makeDraggable(uiElement)
 			local delta = input.Position - dragStart
 			uiElement.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
 		end
-	end)end
+	end)
+end
+
 function SimpleUI:ToggleVisibility(state)
 	self.IsVisible = state
 	self.MainFrame.Visible = state
 	self.OpenButton.Visible = not state
 end
 
--- МЕТОДЫ ДЛЯ СИСТЕМЫ БИНДОВ ИЗ КОДА
 function SimpleUI:AddBind(keyCode, callback)
 	if typeof(keyCode) == "EnumItem" then
 		self.Keybinds[keyCode] = callback
@@ -181,7 +181,7 @@ function SimpleUI:RemoveBind(keyCode)
 		print("[SimpleUI] Удален бинд с клавиши: " .. keyCode.Name)
 	end
 end
--- ЭЛЕМЕНТ: Кнопка
+
 function SimpleUI:AddButton(text, callback)
 	local button = Instance.new("TextButton")
 	button.Size = UDim2.new(0, 235, 0, 35)
@@ -208,7 +208,7 @@ function SimpleUI:AddButton(text, callback)
 		end
 	end)
 end
--- ЭЛЕМЕНТ: Лейбл
+
 function SimpleUI:AddLabel(defaultText, options)
 	local cfg = { Font = Enum.Font.Gotham, TextSize = 12, TextColor = Color3.fromRGB(200, 200, 200), Height = 25, TextXAlignment = Enum.TextXAlignment.Center }
 	if options and type(options) == "table" then for k, v in pairs(options) do cfg[k] = v end end
@@ -229,8 +229,9 @@ function SimpleUI:AddLabel(defaultText, options)
 	function LabelObject:SetSize(newSize) label.TextSize = newSize end
 	function LabelObject:SetFont(newFont) label.Font = newFont end
 	function LabelObject:Destroy() label:Destroy() end
-	return LabelObjectend
--- ========================================================-- НОВЫЙ ЭЛЕМЕНТ: ПЕРЕКЛЮЧАТЕЛЬ (iOS СТИЛЬ, ПЛОСКИЙ)-- ========================================================
+	return LabelObject -- Исправлено: был слипшийся return LabelObjectend
+end
+
 function SimpleUI:AddToggle(text, defaultState, callback)
 	local toggled = defaultState or false
 	
@@ -249,11 +250,10 @@ function SimpleUI:AddToggle(text, defaultState, callback)
 	label.TextXAlignment = Enum.TextXAlignment.Left
 	label.Parent = container
 	
-	-- Фон переключателя (основа)
 	local bg = Instance.new("TextButton")
 	bg.Size = UDim2.new(0, 42, 0, 22)
 	bg.Position = UDim2.new(1, -45, 0.5, -11)
-	bg.BackgroundColor3 = toggled and Color3.fromRGB(48, 209, 88) or Color3.fromRGB(60, 60, 65) -- Зеленый iOS или серый
+	bg.BackgroundColor3 = toggled and Color3.fromRGB(48, 209, 88) or Color3.fromRGB(60, 60, 65)
 	bg.Text = ""
 	bg.BorderSizePixel = 0
 	bg.Parent = container
@@ -262,17 +262,17 @@ function SimpleUI:AddToggle(text, defaultState, callback)
 	bgCorner.CornerRadius = UDim.new(1, 0)
 	bgCorner.Parent = bg
 	
-	-- Подвижный кружок (Toggle Circle)
 	local circle = Instance.new("Frame")
 	circle.Size = UDim2.new(0, 18, 0, 18)
 	circle.Position = toggled and UDim2.new(1, -21, 0.5, -9) or UDim2.new(0, 3, 0.5, -9)
 	circle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-
 	circle.BorderSizePixel = 0
 	circle.Parent = bg
+	
 	local circleCorner = Instance.new("UICorner")
 	circleCorner.CornerRadius = UDim.new(1, 0)
 	circleCorner.Parent = circle
+	
 	local function updateToggle()
 		local targetPos = toggled and UDim2.new(1, -21, 0.5, -9) or UDim2.new(0, 3, 0.5, -9)
 		local targetColor = toggled and Color3.fromRGB(48, 209, 88) or Color3.fromRGB(60, 60, 65)
@@ -280,6 +280,7 @@ function SimpleUI:AddToggle(text, defaultState, callback)
 		TweenService:Create(bg, TweenInfo.new(0.2), {BackgroundColor3 = targetColor}):Play()
 		if callback then task.spawn(callback, toggled) end
 	end
+	
 	bg.MouseButton1Click:Connect(function()
 		toggled = not toggled
 		updateToggle()
@@ -290,9 +291,7 @@ function SimpleUI:AddToggle(text, defaultState, callback)
 	function ToggleObject:GetValue() return toggled end
 	return ToggleObject
 end
--- ========================================================
--- НОВЫЙ ЭЛЕМЕНТ: ГАЛОЧКА (CHECKBOX)
--- ========================================================
+
 function SimpleUI:AddCheckbox(text, defaultState, callback)
 	local checked = defaultState or false
 	local container = Instance.new("Frame")
@@ -333,9 +332,7 @@ function SimpleUI:AddCheckbox(text, defaultState, callback)
 	function CheckboxObject:GetValue() return checked end
 	return CheckboxObject
 end
--- ========================================================
--- НОВЫЙ ЭЛЕМЕНТ: ПОЛЕ ВВОДА ТЕКСТА (TEXTBOX)
--- ========================================================
+
 function SimpleUI:AddTextBox(placeholderText, callback)
 	local container = Instance.new("Frame")
 	container.Size = UDim2.new(0, 235, 0, 35)
@@ -344,7 +341,7 @@ function SimpleUI:AddTextBox(placeholderText, callback)
 	local box = Instance.new("TextBox")
 	box.Size = UDim2.new(1, 0, 1, 0)
 	box.BackgroundColor3 = Color3.fromRGB(40, 40, 45)
-	box.PlaceholderText = placeholderText or "Введите текст..."
+	box.PlaceholderText = placeholderText or "Введите text..."
 	box.PlaceholderColor3 = Color3.fromRGB(120, 120, 125)
 	box.Text = ""
 	box.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -367,11 +364,9 @@ function SimpleUI:AddTextBox(placeholderText, callback)
 	function TextBoxObject:GetValue() return box.Text end
 	return TextBoxObject
 end
--- ========================================================
--- НОВЫЙ ЭЛЕМЕНТ: ВЫБОР КЛЮЧА ИЗ МЕНЮ (KEYBIND)
--- ========================================================
+
 function SimpleUI:AddKeybind(text, defaultKey, callback)
-	local currentKey = defaultKey -- Ссылка на текущий Enum.KeyCode
+	local currentKey = defaultKey 
 	local isBinding = false
 	local container = Instance.new("Frame")
 	container.Size = UDim2.new(0, 235, 0, 35)
@@ -399,7 +394,7 @@ function SimpleUI:AddKeybind(text, defaultKey, callback)
 	local btnCorner = Instance.new("UICorner")
 	btnCorner.CornerRadius = UDim.new(0, 4)
 	btnCorner.Parent = bindBtn
-	-- Логика переназначения
+	
 	bindBtn.MouseButton1Click:Connect(function()
 		if isBinding then return end
 		isBinding = true
@@ -407,27 +402,23 @@ function SimpleUI:AddKeybind(text, defaultKey, callback)
 		bindBtn.BackgroundColor3 = self.Theme.ButtonClick
 		local listenConnection
 		listenConnection = UserInputService.InputBegan:Connect(function(input)
-			-- Пропускаем клики мышки, реагируем только на клавиатуру
 			if input.UserInputType == Enum.UserInputType.Keyboard then
-				-- Убираем старый бинд из класса, если он был
 				if currentKey then self.Keybinds[currentKey] = nil end
 				currentKey = input.KeyCode
 				bindBtn.Text = currentKey.Name
 				bindBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 55)
-				-- Вешаем выполнение функции на новую клавишу
 				if callback then self.Keybinds[currentKey] = callback end
 				isBinding = false
 				listenConnection:Disconnect()
-				end
+			end
 		end)
 	end)
--- Регистрируем дефолтный бинд при старте, если он указан
-if currentKey and callback then
-	self.Keybinds[currentKey] = callback
+
+	if currentKey and callback then
+		self.Keybinds[currentKey] = callback
+	end
 end
 
-end
--- Кнопка удаления меню
 function SimpleUI:AddDestroyButton(customText, customColor)
 	local destroyColor = customColor or Color3.fromRGB(180, 40, 40)
 	local hoverColor = Color3.new(destroyColor.R * 0.7, destroyColor.G * 0.7, destroyColor.B * 0.7)
@@ -448,9 +439,11 @@ function SimpleUI:AddDestroyButton(customText, customColor)
 	button.MouseLeave:Connect(function() TweenService:Create(button, TweenInfo.new(0.2), {BackgroundColor3 = destroyColor}):Play() end)
 	button.MouseButton1Click:Connect(function() self:Destroy() end)
 end
+
 function SimpleUI:Destroy()
 	if self.InputConnection then self.InputConnection:Disconnect() end
 	if self.ScreenGui then self.ScreenGui:Destroy() end
 	print("[SimpleUI] Память очищена.")
 end
+
 return SimpleUI
