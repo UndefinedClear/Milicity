@@ -141,7 +141,8 @@ function SimpleUI.new(titleText, customTheme)
 		end
 	end)
 	
-	return selfend
+	return self
+end
 function SimpleUI:_makeDraggable(uiElement)
 	local dragging, dragStart, startPos
 	uiElement.InputBegan:Connect(function(input)
