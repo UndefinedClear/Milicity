@@ -15,6 +15,7 @@ if not milicityFunc then
 end
 
 local milicity = milicityFunc() -- Успешно запускаем библиотеку
+-- after loading
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -22,6 +23,7 @@ local UserInputService = game:GetService("UserInputService")
 
 local player = Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
+local hum = character.Humanoid
 local root = character:WaitForChild("HumanoidRootPart")
 local camera = workspace.CurrentCamera
 
@@ -30,6 +32,11 @@ local speed = 50          -- Скорость ручного полета
 local flying = false       -- Полет выключен на старте
 local isNoclip = false     -- Ноуклип выключен на старте
 local isRunning = false    -- Статус AFK-цикла (выключен)
+
+
+local isSpeedEnabled = false    -- Статус Speed-цикла (выключен)
+
+
 local COOLDOWN = 3         -- Задержка на каждой точке в AFK (в секундах)
 
 -- Ссылки на UI-элементы для синхронизации кнопок и хоткеев

@@ -40,10 +40,17 @@ function SimpleUI.new(titleText, customTheme)
 	self.IsVisible = true
 	self.Keybinds = {} 
 	
-	-- ГЛАВНОЕ ОКНО
-	local mainFrame = Instance.new("Frame")
-	mainFrame.Size = UDim2.new(0, 260, 0, 420)
-	mainFrame.Position = UDim2.new(0, 50, 0.5, -210)
+	-- ИЗМЕНЕНИЕ 1: Сохраняем целевой размер окна для анимации
+	self.TargetSize = UDim2.new(0, 260, 0, 420)
+	
+	-- ИЗМЕНЕНИЕ 2: Заменяем Frame на CanvasGroup, чтобы дети не вылезали при сжатии
+	local mainFrame = Instance.new("CanvasGroup")
+	mainFrame.Size = self.TargetSize
+	
+	-- ИЗМЕНЕНИЕ 3: Выставляем AnchorPoint и Position по центру экрана
+	mainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+	mainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
+	
 	mainFrame.BackgroundColor3 = self.Theme.WindowBackground
 	mainFrame.BorderSizePixel = 0
 	mainFrame.Parent = screenGui
@@ -102,8 +109,9 @@ function SimpleUI.new(titleText, customTheme)
 		contentFrame.CanvasSize = UDim2.new(0, 0, 0, listLayout.AbsoluteContentSize.Y + 10)
 	end)
 	
-	-- КНОПКА UI
+	-- КНОПКА UI (добавляем ей AnchorPoint по центру, чтобы она тоже красиво вылетала)
 	local openButton = Instance.new("TextButton")
+	openButton.AnchorPoint = Vector2.new(0.5, 0.5)
 	openButton.Size = UDim2.new(0, 50, 0, 50)
 	openButton.Position = UDim2.new(0, 50, 0, 50)
 	openButton.BackgroundColor3 = self.Theme.TriggerBackground
@@ -139,7 +147,7 @@ function SimpleUI.new(titleText, customTheme)
 		end
 	end)
 	
-	return self -- Исправлено: был слипшийся return selfend
+	return self
 end
 
 function SimpleUI:_makeDraggable(uiElement)
@@ -162,52 +170,49 @@ function SimpleUI:_makeDraggable(uiElement)
 	end)
 end
 
+-- ВСТРОЕННЫЙ ОБНОВЛЕННЫЙ МЕТОД TOGGLEVISIBILITY
 function SimpleUI:ToggleVisibility(state)
-	-- self.IsVisible = state
-	-- self.MainFrame.Visible = state
-	-- self.OpenButton.Visible = not state
-
 	self.IsVisible = state
-    
-    -- Анимация открытия: Back создаст крутой эффект "выскакивания" с пружиной
-    local infoOpen = TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
-    -- Анимация закрытия: Quad плавно и быстро сожмет в центр
-    local infoClose = TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
-    
-    if state then
-        self.MainFrame.Visible = true
-        self.OpenButton.Visible = false
-        
-        -- СТАРТОВЫЙ ХАРАКТЕР: Окно сжато в 0 и полностью прозрачно в самом центре
-        self.MainFrame.Size = UDim2.new(0, 0, 0, 0)
-        self.MainFrame.GroupTransparency = 1
-        
-        -- Твин до дефолтных размеров
-        TweenService:Create(self.MainFrame, infoOpen, {
-            Size = self.TargetSize,
-            GroupTransparency = 0
-        }):Play()
-        
-    else
-        -- Анимация схлопывания в центр
-        local closeTween = TweenService:Create(self.MainFrame, infoClose, {
-            Size = UDim2.new(0, 0, 0, 0), -- Сжимаем и ширину, и высоту в ноль
-            GroupTransparency = 1
-        })
-        
-        closeTween:Play()
-        
-        closeTween.Completed:Connect(function()
-            if not self.IsVisible then
-                self.MainFrame.Visible = false
-                self.OpenButton.Visible = true
-                
-                -- Появление кнопки открытия из центра её позиции
-                self.OpenButton.Size = UDim2.new(0, 0, 0, 0)
-                TweenService:Create(self.OpenButton, infoOpen, {Size = UDim2.new(0, 50, 0, 50)}):Play()
-            end
-        end)
-    end
+	
+	-- Анимация открытия: Back создаст крутой эффект "выскакивания" с пружиной
+	local infoOpen = TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+	-- Анимация закрытия: Quad плавно и быстро сожмет в центр
+	local infoClose = TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
+	
+	if state then
+		self.MainFrame.Visible = true
+		self.OpenButton.Visible = false
+		
+		-- СТАРТОВЫЙ ХАРАКТЕР: Окно сжато в 0 и полностью прозрачно в самом центре
+		self.MainFrame.Size = UDim2.new(0, 0, 0, 0)
+		self.MainFrame.GroupTransparency = 1
+		
+		-- Твин до дефолтных размеров
+		TweenService:Create(self.MainFrame, infoOpen, {
+			Size = self.TargetSize,
+			GroupTransparency = 0
+		}):Play()
+		
+	else
+		-- Анимация схлопывания в центр
+		local closeTween = TweenService:Create(self.MainFrame, infoClose, {
+			Size = UDim2.new(0, 0, 0, 0), -- Сжимаем и ширину, и высоту в ноль
+			GroupTransparency = 1
+		})
+		
+		closeTween:Play()
+		
+		closeTween.Completed:Connect(function()
+			if not self.IsVisible then
+				self.MainFrame.Visible = false
+				self.OpenButton.Visible = true
+				
+				-- Появление кнопки открытия из центра её позиции
+				self.OpenButton.Size = UDim2.new(0, 0, 0, 0)
+				TweenService:Create(self.OpenButton, infoOpen, {Size = UDim2.new(0, 50, 0, 50)}):Play()
+			end
+		end)
+	end
 end
 
 function SimpleUI:AddBind(keyCode, callback)
@@ -271,7 +276,7 @@ function SimpleUI:AddLabel(defaultText, options)
 	function LabelObject:SetSize(newSize) label.TextSize = newSize end
 	function LabelObject:SetFont(newFont) label.Font = newFont end
 	function LabelObject:Destroy() label:Destroy() end
-	return LabelObject -- Исправлено: был слипшийся return LabelObjectend
+	return LabelObject
 end
 
 function SimpleUI:AddToggle(text, defaultState, callback)
