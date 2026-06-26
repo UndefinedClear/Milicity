@@ -5,40 +5,28 @@ local TweenService = game:GetService("TweenService")
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 
--- ТЕМА ПО УМОЛЧАНИЮ (Дефолтные настройки цветов и скруглений)
+-- ДЕФОЛТНАЯ ТЕМА
 local DefaultTheme = {
-	-- Скругления углов (в пикселях)
 	CornerRadius = 8,
 	ButtonCornerRadius = 5,
-	
-	-- Цвета главного окна
 	WindowBackground = Color3.fromRGB(30, 30, 30),
 	TitleText = Color3.fromRGB(255, 255, 255),
 	CloseButtonBackground = Color3.fromRGB(45, 45, 45),
 	CloseButtonText = Color3.fromRGB(200, 200, 200),
-	
-	-- Цвета кнопок в меню
 	ButtonBackground = Color3.fromRGB(45, 45, 45),
 	ButtonHover = Color3.fromRGB(60, 60, 60),
 	ButtonClick = Color3.fromRGB(0, 120, 215),
 	ButtonText = Color3.fromRGB(230, 230, 230),
-	
-	-- Цвета плавающей кнопки "UI"
 	TriggerBackground = Color3.fromRGB(0, 120, 215),
 	TriggerText = Color3.fromRGB(255, 255, 255)
 }
 
--- КОНСТРУКТОР: Создание главного контейнера
--- customTheme — необязательная таблица с вашими цветами
 function SimpleUI.new(titleText, customTheme)
 	local self = setmetatable({}, SimpleUI)
 	
-	-- Сливаем кастомную тему с дефолтной (если каких-то полей нет, берутся дефолтные)
 	self.Theme = DefaultTheme
 	if customTheme and type(customTheme) == "table" then
-		for key, value in pairs(customTheme) do
-			self.Theme[key] = value
-		end
+		for key, value in pairs(customTheme) do self.Theme[key] = value end
 	end
 	
 	local playerGui = Players.LocalPlayer:WaitForChild("PlayerGui")
@@ -51,39 +39,36 @@ function SimpleUI.new(titleText, customTheme)
 	
 	self.IsVisible = true
 	
-	-- ==========================================
 	-- ГЛАВНОЕ ОКНО
-	-- ==========================================
 	local mainFrame = Instance.new("Frame")
 	mainFrame.Size = UDim2.new(0, 250, 0, 350)
 	mainFrame.Position = UDim2.new(0, 50, 0.5, -175)
-	mainFrame.BackgroundColor3 = self.Theme.WindowBackground -- Настройка цвета окна
+	mainFrame.BackgroundColor3 = self.Theme.WindowBackground
 	mainFrame.BorderSizePixel = 0
 	mainFrame.Parent = screenGui
 	self.MainFrame = mainFrame
 	
-	-- Настройка скругления окна
 	local uiCorner = Instance.new("UICorner")
 	uiCorner.CornerRadius = UDim.new(0, self.Theme.CornerRadius)
 	uiCorner.Parent = mainFrame
 	
-	-- Заголовок окна
+	-- Заголовок
 	local title = Instance.new("TextLabel")
 	title.Size = UDim2.new(1, -40, 0, 40)
 	title.Position = UDim2.new(0, 10, 0, 0)
 	title.BackgroundTransparency = 1
 	title.Text = titleText or "DEBUG MENU"
-	title.TextColor3 = self.Theme.TitleText -- Настройка цвета текста заголовка
+	title.TextColor3 = self.Theme.TitleText
 	title.Font = Enum.Font.GothamBold
 	title.TextSize = 14
 	title.TextXAlignment = Enum.TextXAlignment.Left
 	title.Parent = mainFrame
 	
-	-- Кнопка закрытия (крестик)
+	-- Крестик закрытия
 	local closeMenuBtn = Instance.new("TextButton")
 	closeMenuBtn.Size = UDim2.new(0, 30, 0, 30)
 	closeMenuBtn.Position = UDim2.new(1, -35, 0, 5)
-	closeMenuBtn.BackgroundColor3 = self.Theme.CloseButtonBackground -- Настройка цвета кнопки закрытия
+	closeMenuBtn.BackgroundColor3 = self.Theme.CloseButtonBackground
 	closeMenuBtn.Text = "X"
 	closeMenuBtn.TextColor3 = self.Theme.CloseButtonText
 	closeMenuBtn.Font = Enum.Font.GothamBold
@@ -92,10 +77,10 @@ function SimpleUI.new(titleText, customTheme)
 	closeMenuBtn.Parent = mainFrame
 	
 	local closeCorner = Instance.new("UICorner")
-	closeCorner.CornerRadius = UDim.new(0, self.Theme.ButtonCornerRadius) -- Скругление крестика
+	closeCorner.CornerRadius = UDim.new(0, self.Theme.ButtonCornerRadius)
 	closeCorner.Parent = closeMenuBtn
 	
-	-- Контейнер для кнопок
+	-- Контейнер для элементов
 	local contentFrame = Instance.new("Frame")
 	contentFrame.Size = UDim2.new(1, 0, 1, -45)
 	contentFrame.Position = UDim2.new(0, 0, 0, 45)
@@ -109,13 +94,11 @@ function SimpleUI.new(titleText, customTheme)
 	listLayout.SortOrder = Enum.SortOrder.LayoutOrder
 	listLayout.Parent = contentFrame
 	
-	-- ==========================================
-	-- ПЛАВАЮЩАЯ КНОПКА ОТКРЫТИЯ (ТРИГГЕР)
-	-- ==========================================
+	-- КНОПКА UI
 	local openButton = Instance.new("TextButton")
 	openButton.Size = UDim2.new(0, 50, 0, 50)
 	openButton.Position = UDim2.new(0, 50, 0, 50)
-	openButton.BackgroundColor3 = self.Theme.TriggerBackground -- Настройка цвета иконки UI
+	openButton.BackgroundColor3 = self.Theme.TriggerBackground
 	openButton.Text = "UI"
 	openButton.TextColor3 = self.Theme.TriggerText
 	openButton.Font = Enum.Font.GothamBold
@@ -127,10 +110,9 @@ function SimpleUI.new(titleText, customTheme)
 	self.OpenButton = openButton
 	
 	local openCorner = Instance.new("UICorner")
-	openCorner.CornerRadius = UDim.new(1, 0) -- Триггер всегда круглый
+	openCorner.CornerRadius = UDim.new(1, 0)
 	openCorner.Parent = openButton
 	
-	-- Инициализация драга
 	self:_makeDraggable(self.MainFrame)
 	self:_makeDraggable(self.OpenButton)
 	
@@ -139,15 +121,12 @@ function SimpleUI.new(titleText, customTheme)
 	
 	self.InputConnection = UserInputService.InputBegan:Connect(function(input, gpe)
 		if gpe then return end
-		if input.KeyCode == Enum.KeyCode.H then
-			self:ToggleVisibility(not self.IsVisible)
-		end
+		if input.KeyCode == Enum.KeyCode.H then self:ToggleVisibility(not self.IsVisible) end
 	end)
 	
 	return self
 end
 
--- Внутренний метод драга
 function SimpleUI:_makeDraggable(uiElement)
 	local dragging, dragStart, startPos
 	uiElement.InputBegan:Connect(function(input)
@@ -168,23 +147,17 @@ function SimpleUI:_makeDraggable(uiElement)
 	end)
 end
 
--- ПУБЛИЧНЫЙ МЕТОД: Показ/Скрытие
 function SimpleUI:ToggleVisibility(state)
 	self.IsVisible = state
-	if state == true then
-		self.MainFrame.Visible = true
-		self.OpenButton.Visible = false
-	else
-		self.MainFrame.Visible = false
-		self.OpenButton.Visible = true
-	end
+	self.MainFrame.Visible = state
+	self.OpenButton.Visible = not state
 end
 
--- ПУБЛИЧНЫЙ МЕТОД: Добавление кастомной кнопки
+-- МЕТОД: Добавление стандартной кнопки
 function SimpleUI:AddButton(text, callback)
 	local button = Instance.new("TextButton")
 	button.Size = UDim2.new(0, 230, 0, 35)
-	button.BackgroundColor3 = self.Theme.ButtonBackground -- Применяем цвет темы
+	button.BackgroundColor3 = self.Theme.ButtonBackground
 	button.Text = text
 	button.TextColor3 = self.Theme.ButtonText
 	button.Font = Enum.Font.Gotham
@@ -193,23 +166,72 @@ function SimpleUI:AddButton(text, callback)
 	button.Parent = self.ContentFrame
 	
 	local corner = Instance.new("UICorner")
-	corner.CornerRadius = UDim.new(0, self.Theme.ButtonCornerRadius) -- Применяем скругление темы
+	corner.CornerRadius = UDim.new(0, self.Theme.ButtonCornerRadius)
 	corner.Parent = button
 	
-	-- Анимация наведения с использованием настроек темы
-	button.MouseEnter:Connect(function()
-		TweenService:Create(button, TweenInfo.new(0.2), {BackgroundColor3 = self.Theme.ButtonHover}):Play()
-	end)
-	button.MouseLeave:Connect(function()
-		TweenService:Create(button, TweenInfo.new(0.2), {BackgroundColor3 = self.Theme.ButtonBackground}):Play()
-	end)
-	
+	button.MouseEnter:Connect(function() TweenService:Create(button, TweenInfo.new(0.2), {BackgroundColor3 = self.Theme.ButtonHover}):Play() end)
+	button.MouseLeave:Connect(function() TweenService:Create(button, TweenInfo.new(0.2), {BackgroundColor3 = self.Theme.ButtonBackground}):Play() end)
 	button.MouseButton1Click:Connect(function()
-		button.BackgroundColor3 = self.Theme.ButtonClick -- Цвет клика из темы
+		button.BackgroundColor3 = self.Theme.ButtonClick
 		task.wait(0.1)
 		button.BackgroundColor3 = self.Theme.ButtonHover
 		if callback then task.spawn(callback) end
 	end)
+end
+
+-- ========================================================
+-- НОВЫЙ МЕТОД: ДОБАВЛЕНИЕ УПРАВЛЯЕМОГО ТЕКСТОВОГО ЛЕЙБЛА
+-- ========================================================
+function SimpleUI:AddLabel(defaultText, options)
+	-- Настройки лейбла по умолчанию
+	local cfg = {
+		Font = Enum.Font.Gotham,
+		TextSize = 12,
+		TextColor = Color3.fromRGB(200, 200, 200),
+		Height = 25,
+		TextXAlignment = Enum.TextXAlignment.Center
+	}
+	
+	-- Заменяем дефолты пользовательскими опциями, если они переданы
+	if options and type(options) == "table" then
+		for k, v in pairs(options) do cfg[k] = v end
+	end
+
+	local label = Instance.new("TextLabel")
+	label.Size = UDim2.new(0, 230, 0, cfg.Height)
+	label.BackgroundTransparency = 1 -- Прозрачный фон, чтобы не забивать дизайн
+	label.Text = defaultText or ""
+	label.TextColor3 = cfg.TextColor
+	label.Font = cfg.Font
+	label.TextSize = cfg.TextSize
+	label.TextXAlignment = cfg.TextXAlignment
+	label.TextWrapped = true -- Авто-перенос длинного текста
+	label.Parent = self.ContentFrame
+
+	-- Создаем ООП-объект для управления этим конкретным лейблом
+	local LabelObject = {}
+	
+	function LabelObject:SetText(newText)
+		label.Text = tostring(newText)
+	end
+	
+	function LabelObject:SetColor(newColor)
+		label.TextColor3 = newColor
+	end
+	
+	function LabelObject:SetSize(newSize)
+		label.TextSize = newSize
+	end
+	
+	function LabelObject:SetFont(newFont)
+		label.Font = newFont
+	end
+	
+	function LabelObject:Destroy()
+		label:Destroy()
+	end
+
+	return LabelObject -- Возвращаем объект управления пользователю
 end
 
 function SimpleUI:Destroy()
