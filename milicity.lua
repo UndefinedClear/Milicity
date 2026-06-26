@@ -179,11 +179,8 @@ function SimpleUI:AddButton(text, callback)
 	end)
 end
 
--- ========================================================
--- НОВЫЙ МЕТОД: ДОБАВЛЕНИЕ УПРАВЛЯЕМОГО ТЕКСТОВОГО ЛЕЙБЛА
--- ========================================================
+-- МЕТОД: Добавление лейбла
 function SimpleUI:AddLabel(defaultText, options)
-	-- Настройки лейбла по умолчанию
 	local cfg = {
 		Font = Enum.Font.Gotham,
 		TextSize = 12,
@@ -191,52 +188,71 @@ function SimpleUI:AddLabel(defaultText, options)
 		Height = 25,
 		TextXAlignment = Enum.TextXAlignment.Center
 	}
-	
-	-- Заменяем дефолты пользовательскими опциями, если они переданы
 	if options and type(options) == "table" then
 		for k, v in pairs(options) do cfg[k] = v end
 	end
-
 	local label = Instance.new("TextLabel")
 	label.Size = UDim2.new(0, 230, 0, cfg.Height)
-	label.BackgroundTransparency = 1 -- Прозрачный фон, чтобы не забивать дизайн
+	label.BackgroundTransparency = 1
 	label.Text = defaultText or ""
 	label.TextColor3 = cfg.TextColor
 	label.Font = cfg.Font
 	label.TextSize = cfg.TextSize
 	label.TextXAlignment = cfg.TextXAlignment
-	label.TextWrapped = true -- Авто-перенос длинного текста
+	label.TextWrapped = true
 	label.Parent = self.ContentFrame
 
-	-- Создаем ООП-объект для управления этим конкретным лейблом
 	local LabelObject = {}
-	
-	function LabelObject:SetText(newText)
-		label.Text = tostring(newText)
-	end
-	
-	function LabelObject:SetColor(newColor)
-		label.TextColor3 = newColor
-	end
-	
-	function LabelObject:SetSize(newSize)
-		label.TextSize = newSize
-	end
-	
-	function LabelObject:SetFont(newFont)
-		label.Font = newFont
-	end
-	
-	function LabelObject:Destroy()
-		label:Destroy()
-	end
-
-	return LabelObject -- Возвращаем объект управления пользователю
+	function LabelObject:SetText(newText) label.Text = tostring(newText) end
+	function LabelObject:SetColor(newColor) label.TextColor3 = newColor end
+	function LabelObject:SetSize(newSize) label.TextSize = newSize end
+	function LabelObject:SetFont(newFont) label.Font = newFont end
+	function LabelObject:Destroy() label:Destroy() end
+	return LabelObject
 end
 
+-- ========================================================
+-- НОВЫЙ МЕТОД: ДОБАВЛЕНИЕ КНОПКИ ДЕСТРУКТОРА (УДАЛЕНИЯ МЕНЮ)
+-- ========================================================
+-- customText — кастомный текст кнопки (дефолт: "Уничтожить меню")
+-- customColor — цвет кнопки, например, красный (дефолт: цвет клика из темы)
+function SimpleUI:AddDestroyButton(customText, customColor)
+	local destroyColor = customColor or Color3.fromRGB(180, 40, 40) -- По умолчанию опасный красный цвет
+	
+	local button = Instance.new("TextButton")
+	button.Size = UDim2.new(0, 230, 0, 35)
+	button.BackgroundColor3 = destroyColor
+	button.Text = customText or "Уничтожить меню"
+	button.TextColor3 = Color3.fromRGB(255, 255, 255)
+	button.Font = Enum.Font.GothamBold
+	button.TextSize = 12
+	button.BorderSizePixel = 0
+	button.Parent = self.ContentFrame
+	
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, self.Theme.ButtonCornerRadius)
+	corner.Parent = button
+	
+	-- Анимация наведения для кнопки удаления
+	button.MouseEnter:Connect(function() 
+		TweenService:Create(button, TweenInfo.new(0.2), {BackgroundColor3 = destroyColor:Darken(0.2) or Color3.fromRGB(140, 30, 30)}):Play() 
+	end)
+	button.MouseLeave:Connect(function() 
+		TweenService:Create(button, TweenInfo.new(0.2), {BackgroundColor3 = destroyColor}):Play() 
+	end)
+	
+	-- При клике вызываем внутренний деструктор всего объекта
+	button.MouseButton1Click:Connect(function()
+		print("[SimpleUI] Запущен процесс полной выгрузки интерфейса...")
+		self:Destroy()
+	end)
+end
+
+-- МЕТОД: Полная очистка
 function SimpleUI:Destroy()
 	if self.InputConnection then self.InputConnection:Disconnect() end
 	if self.ScreenGui then self.ScreenGui:Destroy() end
+	print("[SimpleUI] Интерфейс полностью удален из памяти.")
 end
 
 return SimpleUI
