@@ -5,28 +5,73 @@ local TweenService = game:GetService("TweenService")
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 
+function SimpleUI.Dexplorer()
+	loadstring(game:HttpGet('https://raw.githubusercontent.com/MassiveHubs/loadstring/refs/heads/main/DexXenoAndRezware'))()
+end
+
+function SimpleUI.InfiniteYield()
+	loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))()
+end
+
 -- ДЕФОЛТНАЯ ТЕМА
 local DefaultTheme = {
 	CornerRadius = 8,
 	ButtonCornerRadius = 5,
 	WindowBackground = Color3.fromRGB(30, 30, 30),
+
 	TitleText = Color3.fromRGB(255, 255, 255),
+
 	CloseButtonBackground = Color3.fromRGB(45, 45, 45),
 	CloseButtonText = Color3.fromRGB(200, 200, 200),
+
 	ButtonBackground = Color3.fromRGB(45, 45, 45),
 	ButtonHover = Color3.fromRGB(60, 60, 60),
 	ButtonClick = Color3.fromRGB(0, 120, 215),
 	ButtonText = Color3.fromRGB(230, 230, 230),
+
+	-- UI BUTTON
 	TriggerBackground = Color3.fromRGB(0, 120, 215),
 	TriggerText = Color3.fromRGB(255, 255, 255)
 }
 
-function SimpleUI.new(titleText, customTheme)
+local NeonTheme = {
+    CornerRadius = 10,
+    WindowBackground = Color3.fromRGB(15, 15, 20),
+    TitleText = Color3.fromRGB(0, 255, 150),
+    ButtonBackground = Color3.fromRGB(30, 30, 35),
+    ButtonHover = Color3.fromRGB(0, 255, 150),
+    ButtonText = Color3.fromRGB(255, 255, 255),
+    TriggerBackground = Color3.fromRGB(0, 255, 150)
+}
+
+-- 1. Таблица с дефолтными значениями
+local settings = {
+	titleText = "Example Title",
+	menuOpenByKey = true,
+	menuOpenBindEnum = nil,
+	menuOpenButtonText = "UI"
+}
+
+local example_config = {
+    titleText = "Новый заголовок",
+	customTheme = DefaultTheme,
+    menuOpenByKey = true,
+	menuOpenButtonText = "BABFT"
+}
+
+-- titleText, menuOpenByKey, customTheme, menuOpenBindEnum
+
+function SimpleUI.new(_settings)
 	local self = setmetatable({}, SimpleUI)
+
+	-- 3. Заменяем дефолты на то, что есть в parsedConfig
+	for key, value in pairs(_settings) do
+		settings[key] = value
+	end
 	
 	self.Theme = DefaultTheme
-	if customTheme and type(customTheme) == "table" then
-		for key, value in pairs(customTheme) do self.Theme[key] = value end
+	if settings.customTheme and type(settings.customTheme) == "table" then
+		for key, value in pairs(settings.customTheme) do self.Theme[key] = value end
 	end
 	
 	local playerGui = Players.LocalPlayer:WaitForChild("PlayerGui")
@@ -65,7 +110,7 @@ function SimpleUI.new(titleText, customTheme)
 	title.Size = UDim2.new(1, -40, 0, 40)
 	title.Position = UDim2.new(0, 12, 0, 0)
 	title.BackgroundTransparency = 1
-	title.Text = titleText or "DEBUG MENU"
+	title.Text = settings.titleText or "DEBUG MENU"
 	title.TextColor3 = self.Theme.TitleText
 	title.Font = Enum.Font.GothamBold
 	title.TextSize = 14
@@ -115,7 +160,7 @@ function SimpleUI.new(titleText, customTheme)
 	openButton.Size = UDim2.new(0, 50, 0, 50)
 	openButton.Position = UDim2.new(0, 50, 0, 50)
 	openButton.BackgroundColor3 = self.Theme.TriggerBackground
-	openButton.Text = "UI"
+	openButton.Text = settings.menuOpenButtonText
 	openButton.TextColor3 = self.Theme.TriggerText
 	openButton.Font = Enum.Font.GothamBold
 	openButton.TextSize = 14
@@ -134,18 +179,28 @@ function SimpleUI.new(titleText, customTheme)
 	
 	closeMenuBtn.MouseButton1Click:Connect(function() self:ToggleVisibility(false) end)
 	openButton.MouseButton1Click:Connect(function() self:ToggleVisibility(true) end)
-	
-	self.InputConnection = UserInputService.InputBegan:Connect(function(input, gpe)
-		if gpe then return end
-		
-		if input.KeyCode == Enum.KeyCode.H then 
-			self:ToggleVisibility(not self.IsVisible) 
-		end
-		
-		if self.Keybinds[input.KeyCode] then
-			task.spawn(self.Keybinds[input.KeyCode])
-		end
-	end)
+
+	if settings.menuOpenByKey == true then
+		self.InputConnection = UserInputService.InputBegan:Connect(function(input, gpe)
+			if gpe then return end
+			
+			-- if settings.menuOpenByKey == false then return end
+
+			if settings.menuOpenBindEnum then
+				if input.KeyCode == settings.menuOpenBindEnum then 
+					self:ToggleVisibility(not self.IsVisible) 
+				end
+			else
+				if input.KeyCode == Enum.KeyCode.H then 
+					self:ToggleVisibility(not self.IsVisible) 
+				end
+			end
+			
+			if self.Keybinds[input.KeyCode] then
+				task.spawn(self.Keybinds[input.KeyCode])
+			end
+		end)
+	end
 	
 	return self
 end
@@ -254,6 +309,10 @@ function SimpleUI:AddButton(text, callback)
 			task.spawn(callback)
 		end
 	end)
+
+	local ButtonObject = {}
+	function ButtonObject:Destroy() button:Destroy() end
+	return ButtonObject
 end
 
 function SimpleUI:AddLabel(defaultText, options)
@@ -336,6 +395,8 @@ function SimpleUI:AddToggle(text, defaultState, callback)
 	local ToggleObject = {}
 	function ToggleObject:SetValue(state) toggled = state updateToggle() end
 	function ToggleObject:GetValue() return toggled end
+
+	function ToggleObject:Destroy() container:Destroy() end
 	return ToggleObject
 end
 
@@ -377,6 +438,8 @@ function SimpleUI:AddCheckbox(text, defaultState, callback)
 	local CheckboxObject = {}
 	function CheckboxObject:SetValue(state) checked = state box.Text = state and "✓" or "" box.BackgroundColor3 = state and self.Theme.ButtonClick or Color3.fromRGB(45, 45, 50) end
 	function CheckboxObject:GetValue() return checked end
+
+	function CheckboxObject:Destroy() container:Destroy() end
 	return CheckboxObject
 end
 
@@ -409,6 +472,8 @@ function SimpleUI:AddTextBox(placeholderText, callback)
 	function TextBoxObject:SetPlaceholder(text) box.PlaceholderText = tostring(text) end
 	function TextBoxObject:SetValue(text) box.Text = tostring(text) end
 	function TextBoxObject:GetValue() return box.Text end
+
+	function TextBoxObject:Destroy() container:Destroy() end
 	return TextBoxObject
 end
 
@@ -464,6 +529,10 @@ function SimpleUI:AddKeybind(text, defaultKey, callback)
 	if currentKey and callback then
 		self.Keybinds[currentKey] = callback
 	end
+
+	local KeybindButtonObject = {}
+	function KeybindButtonObject:Destroy() container:Destroy() end
+	return KeybindButtonObject
 end
 
 function SimpleUI:AddDestroyButton(customText, customColor)
@@ -484,12 +553,22 @@ function SimpleUI:AddDestroyButton(customText, customColor)
 
 	button.MouseEnter:Connect(function() TweenService:Create(button, TweenInfo.new(0.2), {BackgroundColor3 = hoverColor}):Play() end)
 	button.MouseLeave:Connect(function() TweenService:Create(button, TweenInfo.new(0.2), {BackgroundColor3 = destroyColor}):Play() end)
-	button.MouseButton1Click:Connect(function() self:Destroy() end)
+	button.MouseButton1Click:Connect(function()
+		self.ToggleVisibility(false)
+		wait(2)
+		self.Destroy()
+	end)
 end
 
 function SimpleUI:Destroy()
 	if self.InputConnection then self.InputConnection:Disconnect() end
 	if self.ScreenGui then self.ScreenGui:Destroy() end
+	if self.Keybinds then
+		for key, value in self.Keybinds do
+			self.Keybinds[key] = nil
+			print("[SimpleUI] Удален бинд с клавиши")
+		end
+	end
 	print("[SimpleUI] Память очищена.")
 end
 

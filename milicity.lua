@@ -5,6 +5,16 @@ local TweenService = game:GetService("TweenService")
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 
+
+
+function SimpleUI.Dexplorer()
+	loadstring(game:HttpGet('https://raw.githubusercontent.com/MassiveHubs/loadstring/refs/heads/main/DexXenoAndRezware'))()
+end
+
+function SimpleUI.InfiniteYield()
+	loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))()
+end
+
 -- ДЕФОЛТНАЯ ТЕМА
 local DefaultTheme = {
 	CornerRadius = 8,
