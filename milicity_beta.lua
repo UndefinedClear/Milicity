@@ -561,17 +561,23 @@ function SimpleUI:AddDestroyButton(customText, customColor)
 end
 
 function SimpleUI:Destroy()
+	-- Отключаем InputConnection если он существует
 	if self.InputConnection then 
 		self.InputConnection:Disconnect() 
 	end
+	
+	-- Уничтожаем GUI
 	if self.ScreenGui then 
 		self.ScreenGui:Destroy() 
 	end
+	
+	-- Очищаем Keybinds
 	if self.Keybinds then
-		for key, _ in pairs(self.Keybinds) do
+		for key, _ in pairs(self.Keybinds) do  -- ИСПРАВЛЕНО: было "in self.Keybinds"
 			self.Keybinds[key] = nil
 		end
 	end
+	
 	print("[SimpleUI] Память очищена.")
 end
 
