@@ -524,6 +524,10 @@ function SimpleUI:AddKeybind(text, defaultKey, callback)
 				listenConnection:Disconnect()
 			end
 		end)
+		
+		-- СОХРАНЯЕМ CONNECTION ДЛЯ ПОСЛЕДУЮЩЕЙ ОЧИСТКИ
+		if not self.ActiveConnections then self.ActiveConnections = {} end
+		table.insert(self.ActiveConnections, listenConnection)
 	end)
 
 	if currentKey and callback then
@@ -535,7 +539,7 @@ function SimpleUI:AddKeybind(text, defaultKey, callback)
 	return KeybindButtonObject
 end
 
-function SimpleUI:AddDestroyButton(customText, customColor)
+function SimpleUI:AddDestroyButton(customText, customColor, beforeDestroy)
 	local destroyColor = customColor or Color3.fromRGB(180, 40, 40)
 	local hoverColor = Color3.new(destroyColor.R * 0.7, destroyColor.G * 0.7, destroyColor.B * 0.7)
 	local button = Instance.new("TextButton")
@@ -554,31 +558,57 @@ function SimpleUI:AddDestroyButton(customText, customColor)
 	button.MouseEnter:Connect(function() TweenService:Create(button, TweenInfo.new(0.2), {BackgroundColor3 = hoverColor}):Play() end)
 	button.MouseLeave:Connect(function() TweenService:Create(button, TweenInfo.new(0.2), {BackgroundColor3 = destroyColor}):Play() end)
 	button.MouseButton1Click:Connect(function()
-		-- self.ToggleVisibility(false)
-		-- wait(2)
+		-- БЕЗОПАСНЫЙ ВЫЗОВ: проверяем что beforeDestroy это функция
+		if type(beforeDestroy) == "function" then
+			local success, err = pcall(beforeDestroy)
+			if not success then
+				warn("[SimpleUI] Ошибка в beforeDestroy:", err)
+			end
+		end
 		self:Destroy()
 	end)
 end
 
 function SimpleUI:Destroy()
-	-- Отключаем InputConnection если он существует
+	-- Отключаем основной InputConnection
 	if self.InputConnection then 
 		self.InputConnection:Disconnect() 
+		self.InputConnection = nil
+	end
+	
+	-- Отключаем ВСЕ активные listenConnection от AddKeybind
+	if self.ActiveConnections then
+		for _, conn in ipairs(self.ActiveConnections) do
+			if conn and conn.Connected then
+				conn:Disconnect()
+			end
+		end
+		self.ActiveConnections = nil
 	end
 	
 	-- Уничтожаем GUI
 	if self.ScreenGui then 
-		self.ScreenGui:Destroy() 
+		self.ScreenGui:Destroy()
+		self.ScreenGui = nil
 	end
 	
 	-- Очищаем Keybinds
 	if self.Keybinds then
-		for key, _ in pairs(self.Keybinds) do  -- ИСПРАВЛЕНО: было "in self.Keybinds"
+		for key, _ in pairs(self.Keybinds) do
 			self.Keybinds[key] = nil
 		end
+		self.Keybinds = nil
 	end
 	
-	print("[SimpleUI] Память очищена.")
+	-- Очищаем ссылки на UI элементы
+	self.MainFrame = nil
+	self.ContentFrame = nil
+	self.OpenButton = nil
+	self.Theme = nil
+	self.TargetSize = nil
+	self.IsVisible = nil
+	
+	print("[SimpleUI] Память полностью очищена.")
 end
 
 return SimpleUI

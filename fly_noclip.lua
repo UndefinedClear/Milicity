@@ -253,7 +253,15 @@ local neonTheme = {
     TriggerBackground = Color3.fromRGB(0, 255, 150)
 }
 
-local menu = milicity.new("МЕНЮ РАЗРАБОТЧИКА", neonTheme)
+local config = {
+    titleText = "МЕНЮ РАЗРАБОТЧИКА",
+	customTheme = neonTheme,
+    menuOpenByKey = true,
+	menuOpenButtonText = "BABFT"
+}
+
+
+local menu = milicity.new(config)
 
 menu:AddLabel("Управление читом и AFK-ботом", {
     Font = Enum.Font.GothamBold,
@@ -392,9 +400,16 @@ end
 --     end
 -- end)
 
-
-menu:AddDestroyButton("Закрыть и очистить память", Color3.fromRGB(200, 50, 50))
-
+menu:AddButton("Dexplorer", function()
+    milicity.Dexplorer()
+end)
+menu:AddDestroyButton("Закрыть и очистить память", Color3.fromRGB(200, 50, 50), function() 
+    if _G.DebugInputConnection then
+        _G.DebugInputConnection:Disconnect()
+        _G.DebugInputConnection = nil
+    end
+end)
+-- beforeDestroy
 print("=======================================================")
 print(" ИНТЕРФЕЙС ИНИЦИАЛИЗИРОВАН")
 print(" [H] Меню | [P] Полёт | [M] Невидимость")
