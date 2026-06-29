@@ -1,15 +1,15 @@
-local SimpleUI = {}
-SimpleUI.__index = SimpleUI
+local FlexUI = {}
+FlexUI.__index = FlexUI
 
 local TweenService = game:GetService("TweenService")
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 
-function SimpleUI.Dexplorer()
+function FlexUI.Dexplorer()
 	loadstring(game:HttpGet('https://raw.githubusercontent.com/MassiveHubs/loadstring/refs/heads/main/DexXenoAndRezware'))()
 end
 
-function SimpleUI.InfiniteYield()
+function FlexUI.InfiniteYield()
 	loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))()
 end
 
@@ -34,14 +34,14 @@ local DefaultTheme = {
 	TriggerText                       = Color3.fromRGB(255, 255, 255),
 
 	--  Select
-	SelectTriggerButtonColor          = Color3.fromRGB(40, 40, 40)
-	SelectTriggerButtonTextColor      = Color3.fromRGB(200, 200, 200)
-	SelectTriggerButtonArrowTextColor = Color3.fromRGB(150, 150, 150)
+	SelectTriggerButtonColor          = Color3.fromRGB(40, 40, 40),
+	SelectTriggerButtonTextColor      = Color3.fromRGB(200, 200, 200),
+	SelectTriggerButtonArrowTextColor = Color3.fromRGB(150, 150, 150),
 
-	SelectOptionActiveBGColor         = Color3.fromRGB(60, 60, 90)
-	SelectOptionActiveTextColor       = Color3.fromRGB(255, 255, 255)
+	SelectOptionActiveBGColor         = Color3.fromRGB(60, 60, 90),
+	SelectOptionActiveTextColor       = Color3.fromRGB(255, 255, 255),
 
-	SelectOptionBGColor               = Color3.fromRGB(45, 45, 45)
+	SelectOptionBGColor               = Color3.fromRGB(45, 45, 45),
 	SelectOptionTextColor             = Color3.fromRGB(180, 180, 180)
 }
 
@@ -83,8 +83,8 @@ local function removeByValue(arr, value)
 end
 
 
-function SimpleUI.new(_settings)
-	local self = setmetatable({}, SimpleUI)
+function FlexUI.new(_settings)
+	local self = setmetatable({}, FlexUI)
 
 	-- 3. Заменяем дефолты на то, что есть в parsedConfig
 	for key, value in pairs(_settings) do
@@ -99,7 +99,7 @@ function SimpleUI.new(_settings)
 	local playerGui = Players.LocalPlayer:WaitForChild("PlayerGui")
 	
 	local screenGui = Instance.new("ScreenGui")
-	screenGui.Name = "SimpleUI_Debugger"
+	screenGui.Name = "FlexUI_Debugger"
 	screenGui.ResetOnSpawn = false
 	screenGui.Parent = playerGui
 	self.ScreenGui = screenGui
@@ -227,7 +227,7 @@ function SimpleUI.new(_settings)
 	return self
 end
 
-function SimpleUI:_makeDraggable(uiElement)
+function FlexUI:_makeDraggable(uiElement)
 	local dragging, dragStart, startPos
 	uiElement.InputBegan:Connect(function(input)
 		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
@@ -248,7 +248,7 @@ function SimpleUI:_makeDraggable(uiElement)
 end
 
 -- ВСТРОЕННЫЙ ОБНОВЛЕННЫЙ МЕТОД TOGGLEVISIBILITY
-function SimpleUI:ToggleVisibility(state)
+function FlexUI:ToggleVisibility(state)
 	self.IsVisible = state
 	
 	-- Анимация открытия: Back создаст крутой эффект "выскакивания" с пружиной
@@ -292,21 +292,21 @@ function SimpleUI:ToggleVisibility(state)
 	end
 end
 
-function SimpleUI:AddBind(keyCode, callback)
+function FlexUI:AddBind(keyCode, callback)
 	if typeof(keyCode) == "EnumItem" then
 		self.Keybinds[keyCode] = callback
-		print("[SimpleUI] Установлен бинд на клавишу: " .. keyCode.Name)
+		print("[FlexUI] Установлен бинд на клавишу: " .. keyCode.Name)
 	end
 end
 
-function SimpleUI:RemoveBind(keyCode)
+function FlexUI:RemoveBind(keyCode)
 	if typeof(keyCode) == "EnumItem" then
 		self.Keybinds[keyCode] = nil
-		print("[SimpleUI] Удален бинд с клавиши: " .. keyCode.Name)
+		print("[FlexUI] Удален бинд с клавиши: " .. keyCode.Name)
 	end
 end
 
-function SimpleUI:AddButton(text, callback)
+function FlexUI:AddButton(text, callback)
 	local button = Instance.new("TextButton")
 	button.Size = UDim2.new(0, 235, 0, 35)
 	button.BackgroundColor3 = self.Theme.ButtonBackground
@@ -349,7 +349,7 @@ end
 	-- self.Theme.SelectOptionTextColor = Color3.fromRGB(180, 180, 180)
 
 --  in dev
-function SimpleUI:AddSelect(elements, defaultValue)
+function FlexUI:AddSelect(elements, defaultValue)
 	local isOpened = false
 	local currentValue = defaultValue or (elements and elements[1]) or ""
 	
@@ -363,7 +363,7 @@ function SimpleUI:AddSelect(elements, defaultValue)
 	triggerButton.TextSize = 14
 	triggerButton.Text = tostring(currentValue)
 	triggerButton.AutoButtonColor = false
-	triggerButton.Parent = mainFrame
+	triggerButton.Parent = self.MainFrame
 	
 	-- Индикатор стрелочки (опционально)
 	local arrow = Instance.new("TextLabel")
@@ -385,7 +385,7 @@ function SimpleUI:AddSelect(elements, defaultValue)
 	contentFrame.ScrollBarImageColor3 = Color3.fromRGB(80, 80, 80)
 	contentFrame.Visible = false
 	contentFrame.ClipsDescendants = true
-	contentFrame.Parent = mainFrame
+	contentFrame.Parent = self.MainFrame
 	self.ContentFrame = contentFrame
 	
 	local listLayout = Instance.new("UIListLayout")
@@ -521,7 +521,7 @@ function SimpleUI:AddSelect(elements, defaultValue)
 	return SelectObject
 end
 
-function SimpleUI:AddLabel(defaultText, options)
+function FlexUI:AddLabel(defaultText, options)
 	local cfg = { Font = Enum.Font.Gotham, TextSize = 12, TextColor = Color3.fromRGB(200, 200, 200), Height = 25, TextXAlignment = Enum.TextXAlignment.Center }
 	if options and type(options) == "table" then for k, v in pairs(options) do cfg[k] = v end end
 	local label = Instance.new("TextLabel")
@@ -544,7 +544,7 @@ function SimpleUI:AddLabel(defaultText, options)
 	return LabelObject
 end
 
-function SimpleUI:AddToggle(text, defaultState, callback)
+function FlexUI:AddToggle(text, defaultState, callback)
 	local toggled = defaultState or false
 	
 	local container = Instance.new("Frame")
@@ -606,7 +606,7 @@ function SimpleUI:AddToggle(text, defaultState, callback)
 	return ToggleObject
 end
 
-function SimpleUI:AddCheckbox(text, defaultState, callback)
+function FlexUI:AddCheckbox(text, defaultState, callback)
 	local checked = defaultState or false
 	local container = Instance.new("Frame")
 	container.Size = UDim2.new(0, 235, 0, 35)
@@ -649,7 +649,7 @@ function SimpleUI:AddCheckbox(text, defaultState, callback)
 	return CheckboxObject
 end
 
-function SimpleUI:AddTextBox(placeholderText, callback)
+function FlexUI:AddTextBox(placeholderText, callback)
 	local container = Instance.new("Frame")
 	container.Size = UDim2.new(0, 235, 0, 35)
 	container.BackgroundTransparency = 1
@@ -683,7 +683,7 @@ function SimpleUI:AddTextBox(placeholderText, callback)
 	return TextBoxObject
 end
 
-function SimpleUI:AddKeybind(text, defaultKey, callback)
+function FlexUI:AddKeybind(text, defaultKey, callback)
 	local currentKey = defaultKey 
 	local isBinding = false
 	local container = Instance.new("Frame")
@@ -745,7 +745,7 @@ function SimpleUI:AddKeybind(text, defaultKey, callback)
 	return KeybindButtonObject
 end
 
-function SimpleUI:AddDestroyButton(customText, customColor, beforeDestroy)
+function FlexUI:AddDestroyButton(customText, customColor, beforeDestroy)
 	local destroyColor = customColor or Color3.fromRGB(180, 40, 40)
 	local hoverColor = Color3.new(destroyColor.R * 0.7, destroyColor.G * 0.7, destroyColor.B * 0.7)
 	local button = Instance.new("TextButton")
@@ -768,14 +768,14 @@ function SimpleUI:AddDestroyButton(customText, customColor, beforeDestroy)
 		if type(beforeDestroy) == "function" then
 			local success, err = pcall(beforeDestroy)
 			if not success then
-				warn("[SimpleUI] Ошибка в beforeDestroy:", err)
+				warn("[FlexUI] Ошибка в beforeDestroy:", err)
 			end
 		end
 		self:Destroy()
 	end)
 end
 
-function SimpleUI:Destroy()
+function FlexUI:Destroy()
 	-- Отключаем основной InputConnection
 	if self.InputConnection then 
 		self.InputConnection:Disconnect() 
@@ -814,7 +814,7 @@ function SimpleUI:Destroy()
 	self.TargetSize = nil
 	self.IsVisible = nil
 	
-	print("[SimpleUI] Память полностью очищена.")
+	print("[FlexUI] Память полностью очищена.")
 end
 
-return SimpleUI
+return FlexUI

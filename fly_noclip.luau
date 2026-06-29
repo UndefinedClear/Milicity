@@ -1,20 +1,28 @@
 -- =======================================================
--- БЕЗОПАСНОЕ ПОДКЛЮЧЕНИЕ ИНТЕРФЕЙСА (Milicity UI)
+-- БЕЗОПАСНОЕ ПОДКЛЮЧЕНИЕ ИНТЕРФЕЙСА (FlexUI UI)
 -- =======================================================
-local success, milicityCode = pcall(function()
-    return game:HttpGet("https://raw.githubusercontent.com/UndefinedClear/Milicity/refs/heads/main/milicity_beta.lua")
-end)
+-- local function SaveLoad()
+--     local success, FlexUICode = pcall(function()
+--         return game:HttpGet("https://raw.githubusercontent.com/UndefinedClear/FlexUI/refs/heads/main/FlexUI.lua")
+--     end)
 
-if not success or not milicityCode or milicityCode == "" then
-    error("[Ошибка] Не удалось скачать интерфейс Milicity. Проверь ссылку или интернет!")
-end
+--     if not success or not FlexUICode or FlexUICode == "" then
+--         error("[Ошибка] Не удалось скачать интерфейс FlexUI. Проверь ссылку или интернет!")
+--     end
 
-local milicityFunc, compileError = loadstring(milicityCode)
-if not milicityFunc then
-    error("[Ошибка компиляции UI]: " .. tostring(compileError))
-end
+--     local FlexUIFunc, compileError = loadstring(FlexUICode)
+--     if not FlexUIFunc then
+--         error("[Ошибка компиляции UI]: " .. tostring(compileError))
+--     else
+--         return FlexUIFunc
+--     end
+-- end
 
-local milicity = milicityFunc()
+-- local Loader = loadstring(game:HttpGet("https://raw.githubusercontent.com/UndefinedClear/FlexUI/refs/heads/main/Loader.lua"))() -- или loadstring если это внешний скрипт
+-- local FlexUIFunc = Loader.LoadFlex() -- Получаем функцию конструктора UI
+-- local FlexUI = FlexUIFunc() -- Создаем экземпляр UI (если FlexUI возвращает таблицу/объект)
+
+local FlexUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/UndefinedClear/FlexUI/refs/heads/main/Loader.lua"))().LoadFlex()()
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -241,7 +249,7 @@ _G.DebugInputConnection = UserInputService.InputBegan:Connect(function(input, ga
 end)
 
 -- =======================================================
--- ИНТЕРФЕЙС (Milicity UI)
+-- ИНТЕРФЕЙС (FlexUI UI)
 -- =======================================================
 local neonTheme = {
     CornerRadius = 10,
@@ -261,7 +269,7 @@ local config = {
 }
 
 
-local menu = milicity.new(config)
+local menu = FlexUI.new(config)
 
 menu:AddLabel("Управление читом и AFK-ботом", {
     Font = Enum.Font.GothamBold,
@@ -401,7 +409,7 @@ end
 -- end)
 
 menu:AddButton("Dexplorer", function()
-    milicity.Dexplorer()
+    FlexUI.Dexplorer()
 end)
 menu:AddDestroyButton("Закрыть и очистить память", Color3.fromRGB(200, 50, 50), function() 
     if _G.DebugInputConnection then
