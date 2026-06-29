@@ -15,23 +15,34 @@ end
 
 -- ДЕФОЛТНАЯ ТЕМА
 local DefaultTheme = {
-	CornerRadius = 8,
-	ButtonCornerRadius = 5,
-	WindowBackground = Color3.fromRGB(30, 30, 30),
+	CornerRadius                      = 8,
+	ButtonCornerRadius                = 5,
+	WindowBackground                  = Color3.fromRGB(30, 30, 30),
 
-	TitleText = Color3.fromRGB(255, 255, 255),
+	TitleText                         = Color3.fromRGB(255, 255, 255),
 
-	CloseButtonBackground = Color3.fromRGB(45, 45, 45),
-	CloseButtonText = Color3.fromRGB(200, 200, 200),
+	CloseButtonBackground             = Color3.fromRGB(45, 45, 45),
+	CloseButtonText                   = Color3.fromRGB(200, 200, 200),
 
-	ButtonBackground = Color3.fromRGB(45, 45, 45),
-	ButtonHover = Color3.fromRGB(60, 60, 60),
-	ButtonClick = Color3.fromRGB(0, 120, 215),
-	ButtonText = Color3.fromRGB(230, 230, 230),
+	ButtonBackground                  = Color3.fromRGB(45, 45, 45),
+	ButtonHover                       = Color3.fromRGB(60, 60, 60),
+	ButtonClick                       = Color3.fromRGB(0, 120, 215),
+	ButtonText                        = Color3.fromRGB(230, 230, 230),
 
 	-- UI BUTTON
-	TriggerBackground = Color3.fromRGB(0, 120, 215),
-	TriggerText = Color3.fromRGB(255, 255, 255)
+	TriggerBackground                 = Color3.fromRGB(0, 120, 215),
+	TriggerText                       = Color3.fromRGB(255, 255, 255),
+
+	--  Select
+	SelectTriggerButtonColor          = Color3.fromRGB(40, 40, 40)
+	SelectTriggerButtonTextColor      = Color3.fromRGB(200, 200, 200)
+	SelectTriggerButtonArrowTextColor = Color3.fromRGB(150, 150, 150)
+
+	SelectOptionActiveBGColor         = Color3.fromRGB(60, 60, 90)
+	SelectOptionActiveTextColor       = Color3.fromRGB(255, 255, 255)
+
+	SelectOptionBGColor               = Color3.fromRGB(45, 45, 45)
+	SelectOptionTextColor             = Color3.fromRGB(180, 180, 180)
 }
 
 local NeonTheme = {
@@ -60,6 +71,17 @@ local example_config = {
 }
 
 -- titleText, menuOpenByKey, customTheme, menuOpenBindEnum
+-- Utils
+local function removeByValue(arr, value)
+    for i = #arr, 1, -1 do
+		if arr[i] == value then
+			table.remove(arr, i)
+			return true
+		end
+	end
+    return false -- элемент не найден
+end
+
 
 function SimpleUI.new(_settings)
 	local self = setmetatable({}, SimpleUI)
@@ -313,6 +335,190 @@ function SimpleUI:AddButton(text, callback)
 	local ButtonObject = {}
 	function ButtonObject:Destroy() button:Destroy() end
 	return ButtonObject
+end
+
+-- self.Theme.SelectTriggerButtonColor = Color3.fromRGB(40, 40, 40)
+-- self.Theme.SelectTriggerButtonTextColor = Color3.fromRGB(200, 200, 200)
+-- self.Theme.SelectTriggerButtonArrowTextColor = Color3.fromRGB(150, 150, 150)
+
+
+	-- self.Theme.SelectOptionActiveBGColor = Color3.fromRGB(60, 60, 90)
+	-- self.Theme.SelectOptionActiveTextColor = Color3.fromRGB(255, 255, 255)
+
+	-- self.Theme.SelectOptionBGColor = Color3.fromRGB(45, 45, 45)
+	-- self.Theme.SelectOptionTextColor = Color3.fromRGB(180, 180, 180)
+
+--  in dev
+function SimpleUI:AddSelect(elements, defaultValue)
+	local isOpened = false
+	local currentValue = defaultValue or (elements and elements[1]) or ""
+	
+	-- 1. Создаем кнопку-триггер (верхняя часть селекта)
+	local triggerButton = Instance.new("TextButton")
+	triggerButton.Size = UDim2.new(1, 0, 0, 35)
+	triggerButton.Position = UDim2.new(0, 0, 0, 0)
+	triggerButton.BackgroundColor3 = self.Theme.SelectTriggerButtonColor
+	triggerButton.TextColor3 = self.Theme.SelectTriggerButtonTextColor
+	triggerButton.Font = Enum.Font.GothamMedium
+	triggerButton.TextSize = 14
+	triggerButton.Text = tostring(currentValue)
+	triggerButton.AutoButtonColor = false
+	triggerButton.Parent = mainFrame
+	
+	-- Индикатор стрелочки (опционально)
+	local arrow = Instance.new("TextLabel")
+	arrow.Size = UDim2.new(0, 30, 1, 0)
+	arrow.Position = UDim2.new(1, -30, 0, 0)
+	arrow.BackgroundTransparency = 1
+	arrow.Text = "▼"
+	arrow.TextSize = 10
+	arrow.TextColor3 = self.Theme.SelectTriggerButtonArrowTextColor
+	arrow.Parent = triggerButton
+
+	-- 2. Создаем выпадающий контейнер (ваш原有代码 + улучшения)
+	local contentFrame = Instance.new("ScrollingFrame")
+	contentFrame.Size = UDim2.new(1, 0, 0, 0) -- Высота 0 когда закрыто
+	contentFrame.Position = UDim2.new(0, 0, 0, 36)
+	contentFrame.BackgroundTransparency = 1
+	contentFrame.BorderSizePixel = 0
+	contentFrame.ScrollBarThickness = 3
+	contentFrame.ScrollBarImageColor3 = Color3.fromRGB(80, 80, 80)
+	contentFrame.Visible = false
+	contentFrame.ClipsDescendants = true
+	contentFrame.Parent = mainFrame
+	self.ContentFrame = contentFrame
+	
+	local listLayout = Instance.new("UIListLayout")
+	listLayout.Padding = UDim.new(0, 2)
+	listLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	listLayout.Parent = contentFrame
+	
+	-- Автоподстройка CanvasSize
+	listLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+		contentFrame.CanvasSize = UDim2.new(0, 0, 0, listLayout.AbsoluteContentSize.Y + 4)
+	end) 
+
+	-- 3. Объект для управления селектом
+	local SelectObject = {}
+	local optionButtons = {}
+
+	-- Функция обновления визуала выбранного элемента
+	local function updateHighlight()
+		for _, btn in ipairs(optionButtons) do
+			if btn.Name == tostring(currentValue) then
+				btn.BackgroundColor3 = self.Theme.SelectOptionActiveBGColor -- Цвет активного
+				btn.TextColor3 = self.Theme.SelectOptionActiveTextColor
+			else
+				btn.BackgroundColor3 = self.Theme.SelectOptionBGColor -- Цвет обычного
+				btn.TextColor3 = self.Theme.SelectOptionTextColor
+			end
+		end
+		triggerButton.Text = tostring(currentValue)
+	end
+
+	-- Генерация опций
+	if elements and type(elements) == "table" then
+		for i, element in ipairs(elements) do
+			local optBtn = Instance.new("TextButton")
+			optBtn.Name = tostring(element)
+			optBtn.Size = UDim2.new(1, -4, 0, 28)
+			optBtn.BackgroundColor3 = self.Theme.SelectOptionBGColor
+			optBtn.TextColor3 = self.Theme.SelectOptionTextColor
+			optBtn.Font = Enum.Font.Gotham
+			optBtn.TextSize = 13
+			optBtn.Text = tostring(element)
+			optBtn.AutoButtonColor = false
+			optBtn.LayoutOrder = i
+			optBtn.Parent = contentFrame
+			
+			table.insert(optionButtons, optBtn)
+			
+			optBtn.MouseButton1Click:Connect(function()
+				currentValue = element
+				updateHighlight()
+				SelectObject:Close()
+				if SelectObject.OnChanged then
+					SelectObject.OnChanged(currentValue)
+				end
+			end)
+		end
+	end
+
+	-- Логика открытия/закрытия
+	function SelectObject:Open()
+		isOpened = true
+		contentFrame.Visible = true
+		-- Анимация раскрытия (простая)
+		contentFrame:TweenSize(UDim2.new(1, 0, 0, math.min(listLayout.AbsoluteContentSize.Y + 4, 150)), "Out", "Quad", 0.2, true)
+		arrow.Text = "▲"
+		updateHighlight()
+	end
+
+	function SelectObject:Close()
+		isOpened = false
+		contentFrame:TweenSize(UDim2.new(1, 0, 0, 0), "Out", "Quad", 0.15, true, function()
+			if not isOpened then contentFrame.Visible = false end
+		end)
+		arrow.Text = "▼"
+	end
+
+	function SelectObject:Toggle()
+		if isOpened then self:Close() else self:Open() end
+	end
+
+	-- Привязка клика к триггеру
+	triggerButton.MouseButton1Click:Connect(function()
+		SelectObject:Toggle()
+	end)
+
+	-- Публичные методы
+	function SelectObject:SetValue(val)
+		currentValue = val
+		updateHighlight()
+	end
+
+	function SelectObject:GetValue()
+		return currentValue
+	end
+
+	function SelectObject:AddElement(element_value)
+		elements[#elements + 1] = element_value
+		updateHighlight()
+		return elements
+	end
+
+	function SelectObject:RemoveElementByIndex(element_index)
+		table.remove(elements, element_index)
+		updateHighlight()
+	end
+
+	function SelectObject:RemoveElementByName(arr, value)
+		local status = removeByValue(arr, value)
+		updateHighlight()
+		return status
+	end
+
+
+	function SelectObject:SetElementsArray(new_elements)
+		elements = new_elements
+		currentValue = defaultValue or (elements and elements[1]) or ""
+		updateHighlight()
+	end
+	
+	function SelectObject:GetElementsArray()
+		return elements
+	end
+
+	function SelectObject:Destroy()
+		triggerButton:Destroy()
+		contentFrame:Destroy()
+	end
+
+	-- Инициализация начального состояния
+	updateHighlight()
+
+	return SelectObject
 end
 
 function SimpleUI:AddLabel(defaultText, options)
